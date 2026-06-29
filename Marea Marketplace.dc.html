@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  input,textarea,select,button{font-family:inherit;}
+  input:focus,textarea:focus,select:focus{outline:none;}
+  ::placeholder{color:#b3a999;}
+  @keyframes mareaFade{from{transform:translateY(14px);}to{transform:translateY(0);}}
+  @keyframes mareaPop{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+  @keyframes mareaOverlay{from{opacity:0;}to{opacity:1;}}
+  @keyframes mareaToast{from{opacity:0;transform:translateX(-50%) translateY(22px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:#dfd3c2;border-radius:8px;}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#FAF4EC;color:#29302E;font-family:'Nunito',sans-serif;-webkit-font-smoothing:antialiased;">
+
+  <header style="position:sticky;top:0;z-index:50;background:rgba(250,244,236,0.82);backdrop-filter:blur(14px);border-bottom:1px solid #EBE2D6;">
+    <div style="max-width:1240px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:24px;">
+      <button onClick="{{ goCatalog }}" style="display:flex;align-items:baseline;gap:2px;border:none;background:transparent;cursor:pointer;padding:0;">
+        <span style="font-family:'Fredoka',sans-serif;font-weight:600;font-size:27px;letter-spacing:-.01em;color:#2C5E66;">Marea</span>
+        <span style="width:7px;height:7px;border-radius:50%;background:#C99A5B;display:inline-block;margin-left:1px;"></span>
+      </button>
+      <div style="flex:1;max-width:420px;position:relative;">
+        <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);color:#a99e8c;font-size:15px;">⌕</span>
+        <input value="{{ search }}" onInput="{{ onSearch }}" placeholder="Buscar marca, pieza o categoría…" style="width:100%;padding:11px 16px 11px 38px;border:1px solid #E4D9C8;border-radius:999px;background:#fff;font-size:14.5px;color:#29302E;" />
+      </div>
+      <nav style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+        <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+          <button onClick="{{ n.onClick }}" style="{{ n.style }}" style-hover="{{ n.styleHover }}">{{ n.label }}</button>
+        </sc-for>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ================= CATÁLOGO ================= -->
+  <sc-if value="{{ isCatalog }}" hint-placeholder-val="{{ true }}">
+    <div style="animation:mareaFade .45s ease;max-width:1240px;margin:0 auto;padding:44px 28px 90px;">
+      <div style="margin-bottom:40px;max-width:620px;">
+        <div style="font-weight:700;font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:#C99A5B;margin-bottom:14px;">Boutique de lujo circular</div>
+        <h1 style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:clamp(38px,5vw,56px);line-height:1.05;margin:0 0 16px;color:#243a3d;letter-spacing:-.015em;">Piezas que merecen<br>una segunda historia</h1>
+        <p style="font-size:17px;line-height:1.55;color:#6E7B78;margin:0;text-wrap:pretty;">Carteras, perfumes y prendas de marca, autenticadas y seleccionadas a mano para mujeres salvadoreñas con buen ojo.</p>
+      </div>
+
+      <div style="display:flex;gap:40px;align-items:flex-start;">
+        <aside style="width:222px;flex-shrink:0;position:sticky;top:96px;">
+          <div style="font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#a3987f;margin:0 0 10px;">Categoría</div>
+          <sc-for list="{{ catChips }}" as="c" hint-placeholder-count="4">
+            <button onClick="{{ c.onClick }}" style="{{ c.style }}" style-hover="{{ c.styleHover }}">{{ c.label }}</button>
+          </sc-for>
+          <div style="font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#a3987f;margin:26px 0 10px;">Marca</div>
+          <sc-for list="{{ brandChips }}" as="b" hint-placeholder-count="5">
+            <button onClick="{{ b.onClick }}" style="{{ b.style }}" style-hover="{{ b.styleHover }}">{{ b.label }}</button>
+          </sc-for>
+          <div style="font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#a3987f;margin:26px 0 10px;">Precio máximo</div>
+          <input type="range" min="100" max="5000" step="50" value="{{ priceMax }}" onInput="{{ onPrice }}" style="width:100%;accent-color:#2C5E66;" />
+          <div style="font-weight:700;font-size:15px;color:#2C5E66;margin-top:6px;">Hasta {{ priceMaxLabel }}</div>
+        </aside>
+
+        <main style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <div style="font-size:14.5px;color:#6E7B78;font-weight:600;">{{ resultLabel }}</div>
+          </div>
+          <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:80px 20px;border:1px dashed #DDD0BD;border-radius:20px;color:#9a8f7d;">
+              <div style="font-size:30px;margin-bottom:10px;">⌕</div>
+              <div style="font-weight:700;color:#6E7B78;">No encontramos piezas con esos filtros</div>
+            </div>
+          </sc-if>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));gap:24px;">
+            <sc-for list="{{ catalog }}" as="item" hint-placeholder-count="6">
+              <button onClick="{{ item.onSelect }}" style="text-align:left;border:1px solid #EBE2D6;background:#fff;border-radius:20px;overflow:hidden;cursor:pointer;padding:0;transition:transform .28s ease,box-shadow .28s ease;font-family:inherit;" style-hover="transform:translateY(-6px);box-shadow:0 18px 38px rgba(44,94,102,.14);">
+                <div style="position:relative;height:228px;background:repeating-linear-gradient(135deg,#EFE6D7,#EFE6D7 14px,#E6D9C6 14px,#E6D9C6 28px);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                  <sc-if value="{{ item.hasImage }}" hint-placeholder-val="{{ false }}">
+                    <img src="{{ item.imageUrl }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
+                  </sc-if>
+                  <sc-if value="{{ item.noImage }}" hint-placeholder-val="{{ true }}">
+                    <span style="font-family:'Courier New',monospace;font-size:11px;letter-spacing:.06em;color:#9a8f7d;background:rgba(255,255,255,.65);padding:5px 10px;border-radius:7px;">{{ item.imgLabel }}</span>
+                  </sc-if>
+                  <sc-if value="{{ item.isNew }}" hint-placeholder-val="{{ false }}">
+                    <span style="position:absolute;top:13px;left:13px;background:#2C5E66;color:#fff;font-weight:700;font-size:11px;letter-spacing:.05em;padding:5px 11px;border-radius:999px;z-index:1;">NUEVO</span>
+                  </sc-if>
+                </div>
+                <div style="padding:16px 17px 18px;">
+                  <div style="font-weight:700;font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:#4A8C8F;margin-bottom:5px;">{{ item.brand }}</div>
+                  <div style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:17px;color:#283b3d;line-height:1.25;margin-bottom:12px;min-height:42px;">{{ item.name }}</div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                    <span style="font-weight:800;font-size:18px;color:#243a3d;">{{ item.priceLabel }}</span>
+                    <span style="font-size:11.5px;font-weight:700;color:#8a7e6e;background:#F2EADD;padding:4px 10px;border-radius:999px;">{{ item.condition }}</span>
+                  </div>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+        </main>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ================= DETALLE ================= -->
+  <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:mareaFade .45s ease;max-width:1120px;margin:0 auto;padding:30px 28px 90px;">
+      <button onClick="{{ goCatalog }}" style="border:none;background:transparent;color:#6E7B78;font-weight:700;font-size:14.5px;cursor:pointer;padding:6px 0;margin-bottom:22px;" style-hover="color:#2C5E66;">← Volver al catálogo</button>
+      <div style="display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="flex:1;min-width:340px;">
+          <div style="position:relative;height:470px;border-radius:22px;background:repeating-linear-gradient(135deg,#EFE6D7,#EFE6D7 18px,#E6D9C6 18px,#E6D9C6 36px);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <sc-if value="{{ dHasImage }}" hint-placeholder-val="{{ false }}">
+              <img src="{{ dImageUrl }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" />
+            </sc-if>
+            <sc-if value="{{ dNoImage }}" hint-placeholder-val="{{ true }}">
+              <span style="font-family:'Courier New',monospace;font-size:13px;letter-spacing:.07em;color:#9a8f7d;background:rgba(255,255,255,.7);padding:7px 14px;border-radius:8px;">{{ dGalleryLabel }}</span>
+            </sc-if>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:14px;">
+            <sc-for list="{{ galleryThumbs }}" as="t" hint-placeholder-count="3">
+              <button onClick="{{ t.onClick }}" style="{{ t.style }}">
+                <sc-if value="{{ t.hasThumb }}" hint-placeholder-val="{{ false }}">
+                  <img src="{{ t.thumbUrl }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:10px;" />
+                </sc-if>
+                <sc-if value="{{ t.noThumb }}" hint-placeholder-val="{{ true }}">
+                  <span style="font-family:'Courier New',monospace;font-size:10px;color:#9a8f7d;">{{ t.label }}</span>
+                </sc-if>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="width:420px;flex-shrink:0;">
+          <div style="font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:#4A8C8F;margin-bottom:8px;">{{ dBrand }}</div>
+          <h1 style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:34px;line-height:1.1;color:#243a3d;margin:0 0 18px;">{{ dName }}</h1>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px;">
+            <span style="font-weight:800;font-size:30px;color:#243a3d;">{{ dPriceLabel }}</span>
+            <span style="font-size:12.5px;font-weight:700;color:#8a7e6e;background:#F2EADD;padding:6px 13px;border-radius:999px;">{{ dCondition }}</span>
+          </div>
+          <p style="font-size:16px;line-height:1.6;color:#5b6764;margin:0 0 26px;text-wrap:pretty;">{{ dDesc }}</p>
+          <div style="display:flex;align-items:center;gap:10px;padding:14px 16px;background:#EEF3EF;border-radius:14px;margin-bottom:26px;">
+            <span style="font-size:18px;">✓</span>
+            <span style="font-size:13.5px;color:#42706f;font-weight:600;">Autenticidad verificada por el equipo Marea · Vendido por {{ dSeller }}</span>
+          </div>
+          <button onClick="{{ openInterest }}" style="width:100%;background:#2C5E66;color:#fff;border:none;border-radius:999px;padding:16px;font-weight:700;font-size:16px;cursor:pointer;transition:background .2s;" style-hover="background:#4A8C8F;">Quiero este producto</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ================= REGISTRO VENDEDORA ================= -->
+  <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:mareaFade .45s ease;max-width:540px;margin:0 auto;padding:50px 28px 90px;">
+      <sc-if value="{{ regSubmitted }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px solid #EBE2D6;border-radius:24px;padding:50px 40px;text-align:center;">
+          <div style="width:72px;height:72px;border-radius:50%;background:#EEF3EF;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:32px;color:#3d7a6f;">✓</div>
+          <h2 style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:28px;color:#243a3d;margin:0 0 12px;">Tu cuenta está en revisión</h2>
+          <p style="font-size:15.5px;line-height:1.6;color:#6E7B78;margin:0 0 28px;">Gracias por unirte a Marea. Nuestro equipo revisará tu perfil y te avisaremos por correo en un máximo de 48 horas.</p>
+          <button onClick="{{ goCatalog }}" style="background:#2C5E66;color:#fff;border:none;border-radius:999px;padding:13px 30px;font-weight:700;font-size:15px;cursor:pointer;" style-hover="background:#4A8C8F;">Explorar el catálogo</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ regForm }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#fff;border:1px solid #EBE2D6;border-radius:24px;padding:40px;">
+          <div style="font-weight:700;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:#C99A5B;margin-bottom:12px;">Vender en Marea</div>
+          <h2 style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:30px;color:#243a3d;margin:0 0 8px;">Conviértete en vendedora</h2>
+          <p style="font-size:15px;color:#6E7B78;margin:0 0 28px;line-height:1.5;">Crea tu cuenta y comienza a dar una segunda vida a tus piezas de lujo.</p>
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <label style="display:block;"><span style="display:block;font-weight:700;font-size:13px;color:#5b6764;margin-bottom:6px;">Nombre completo</span><input value="{{ rName }}" onInput="{{ onRName }}" placeholder="Tu nombre" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;" /></label>
+            <label style="display:block;"><span style="display:block;font-weight:700;font-size:13px;color:#5b6764;margin-bottom:6px;">Correo</span><input value="{{ rEmail }}" onInput="{{ onREmail }}" placeholder="tucorreo@mail.com" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;" /></label>
+            <label style="display:block;"><span style="display:block;font-weight:700;font-size:13px;color:#5b6764;margin-bottom:6px;">Teléfono</span><input value="{{ rPhone }}" onInput="{{ onRPhone }}" placeholder="+503 7000 0000" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;" /></label>
+            <label style="display:block;"><span style="display:block;font-weight:700;font-size:13px;color:#5b6764;margin-bottom:6px;">Dirección</span><input value="{{ rAddr }}" onInput="{{ onRAddr }}" placeholder="San Salvador, Santa Ana, San Miguel…" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;" /></label>
+            <label style="display:block;"><span style="display:block;font-weight:700;font-size:13px;color:#5b6764;margin-bottom:6px;">Contraseña</span><input type="password" value="{{ rPass }}" onInput="{{ onRPass }}" placeholder="••••••••" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;" /></label>
+            <button onClick="{{ submitRegister }}" style="margin-top:8px;background:#2C5E66;color:#fff;border:none;border-radius:999px;padding:15px;font-weight:700;font-size:16px;cursor:pointer;transition:background .2s;" style-hover="background:#4A8C8F;">Crear cuenta</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ================= PANEL VENDEDORA ================= -->
+  <sc-if value="{{ isSeller }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:mareaFade .45s ease;max-width:1020px;margin:0 auto;padding:44px 28px 90px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:30px;flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:700;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:#C99A5B;margin-bottom:8px;">Panel de vendedora</div>
+          <h1 style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:34px;color:#243a3d;margin:0;">Hola, {{ sellerName }}</h1>
+        </div>
+        <button onClick="{{ openUpload }}" style="background:#2C5E66;color:#fff;border:none;border-radius:999px;padding:13px 26px;font-weight:700;font-size:15px;cursor:pointer;transition:background .2s;" style-hover="background:#4A8C8F;">+ Subir producto</button>
+      </div>
+
+      <div style="display:flex;gap:14px;margin-bottom:30px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;background:#fff;border:1px solid #EBE2D6;border-radius:16px;padding:18px 20px;">
+          <div style="font-size:28px;font-weight:800;color:#243a3d;font-family:'Fredoka',sans-serif;">{{ sPublished }}</div>
+          <div style="font-size:13px;color:#6E7B78;font-weight:600;">Publicados</div>
+        </div>
+        <div style="flex:1;min-width:140px;background:#fff;border:1px solid #EBE2D6;border-radius:16px;padding:18px 20px;">
+          <div style="font-size:28px;font-weight:800;color:#A9762C;font-family:'Fredoka',sans-serif;">{{ sReview }}</div>
+          <div style="font-size:13px;color:#6E7B78;font-weight:600;">En revisión</div>
+        </div>
+        <div style="flex:1;min-width:140px;background:#fff;border:1px solid #EBE2D6;border-radius:16px;padding:18px 20px;">
+          <div style="font-size:28px;font-weight:800;color:#3d7a6f;font-family:'Fredoka',sans-serif;">{{ sSold }}</div>
+          <div style="font-size:13px;color:#6E7B78;font-weight:600;">Vendidos</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <sc-for list="{{ sellerProducts }}" as="p" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:18px;background:#fff;border:1px solid #EBE2D6;border-radius:16px;padding:14px 18px;">
+            <div style="width:64px;height:64px;flex-shrink:0;border-radius:12px;background:repeating-linear-gradient(135deg,#EFE6D7,#EFE6D7 9px,#E6D9C6 9px,#E6D9C6 18px);"></div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#4A8C8F;">{{ p.brand }}</div>
+              <div style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:17px;color:#283b3d;">{{ p.name }}</div>
+            </div>
+            <div style="font-weight:800;font-size:17px;color:#243a3d;">{{ p.priceLabel }}</div>
+            <span style="{{ p.statusStyle }}">{{ p.statusLabel }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ================= PANEL ADMIN ================= -->
+  <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+    <div style="animation:mareaFade .45s ease;max-width:1020px;margin:0 auto;padding:44px 28px 90px;">
+      <div style="font-weight:700;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:#C99A5B;margin-bottom:8px;">Administración</div>
+      <h1 style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:34px;color:#243a3d;margin:0 0 26px;">Panel de control</h1>
+
+      <div style="display:flex;gap:8px;margin-bottom:28px;border-bottom:1px solid #EBE2D6;padding-bottom:0;flex-wrap:wrap;">
+        <sc-for list="{{ adminTabs }}" as="t" hint-placeholder-count="3">
+          <button onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}<sc-if value="{{ t.hasCount }}" hint-placeholder-val="{{ false }}"><span style="{{ t.badgeStyle }}">{{ t.count }}</span></sc-if></button>
+        </sc-for>
+      </div>
+
+      <!-- Tab Cuentas -->
+      <sc-if value="{{ isTabCuentas }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <sc-for list="{{ sellersVM }}" as="s" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:18px;background:#fff;border:1px solid #EBE2D6;border-radius:16px;padding:16px 20px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:200px;">
+                <div style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:18px;color:#283b3d;">{{ s.name }}</div>
+                <div style="font-size:13.5px;color:#6E7B78;">{{ s.email }} · {{ s.phone }} · {{ s.address }}</div>
+              </div>
+              <span style="{{ s.statusStyle }}">{{ s.statusLabel }}</span>
+              <sc-if value="{{ s.canAct }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:8px;">
+                  <button onClick="{{ s.onApprove }}" style="background:#2C5E66;color:#fff;border:none;border-radius:999px;padding:9px 18px;font-weight:700;font-size:13.5px;cursor:pointer;" style-hover="background:#4A8C8F;">Aprobar</button>
+                  <button onClick="{{ s.onReject }}" style="background:#fff;color:#b24a3e;border:1px solid #ecccc6;border-radius:999px;padding:9px 18px;font-weight:700;font-size:13.5px;cursor:pointer;" style-hover="background:#fbeeec;">Rechazar</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- Tab Productos -->
+      <sc-if value="{{ isTabProductos }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ noPendingProducts }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:60px;color:#9a8f7d;border:1px dashed #DDD0BD;border-radius:18px;font-weight:600;">No hay productos pendientes de revisión 🎉</div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <sc-for list="{{ pendingProducts }}" as="p" hint-placeholder-count="2">
+            <div style="display:flex;align-items:center;gap:18px;background:#fff;border:1px solid #EBE2D6;border-radius:16px;padding:14px 18px;flex-wrap:wrap;">
+              <div style="width:64px;height:64px;flex-shrink:0;border-radius:12px;background:repeating-linear-gradient(135deg,#EFE6D7,#EFE6D7 9px,#E6D9C6 9px,#E6D9C6 18px);"></div>
+              <div style="flex:1;min-width:180px;">
+                <div style="font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#4A8C8F;">{{ p.brand }} · {{ p.category }}</div>
+                <div style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:17px;color:#283b3d;">{{ p.name }}</div>
+                <div style="font-size:13px;color:#6E7B78;">Por {{ p.seller }} · {{ p.condition }}</div>
+              </div>
+              <div style="font-weight:800;font-size:17px;color:#243a3d;">{{ p.priceLabel }}</div>
+              <div style="display:flex;gap:8px;">
+                <button onClick="{{ p.onApprove }}" style="background:#2C5E66;color:#fff;border:none;border-radius:999px;padding:9px 18px;font-weight:700;font-size:13.5px;cursor:pointer;" style-hover="background:#4A8C8F;">Aprobar</button>
+                <button onClick="{{ p.onReject }}" style="background:#fff;color:#b24a3e;border:1px solid #ecccc6;border-radius:999px;padding:9px 18px;font-weight:700;font-size:13.5px;cursor:pointer;" style-hover="background:#fbeeec;">Rechazar</button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- Tab Solicitudes -->
+      <sc-if value="{{ isTabSolicitudes }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ noRequests }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:60px;color:#9a8f7d;border:1px dashed #DDD0BD;border-radius:18px;font-weight:600;">Aún no hay solicitudes de interés</div>
+        </sc-if>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <sc-for list="{{ requestsVM }}" as="r" hint-placeholder-count="2">
+            <div style="background:#fff;border:1px solid #EBE2D6;border-radius:18px;padding:20px 22px;">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+                <div>
+                  <div style="font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#4A8C8F;">{{ r.brand }}</div>
+                  <div style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:19px;color:#283b3d;">{{ r.productName }}</div>
+                  <div style="font-size:13.5px;color:#6E7B78;margin-top:4px;">Interesada: <b style="color:#5b6764;">{{ r.buyerName }}</b> · {{ r.buyerPhone }} · {{ r.buyerAddress }}</div>
+                </div>
+                <sc-if value="{{ r.sold }}" hint-placeholder-val="{{ false }}">
+                  <span style="background:#EEF3EF;color:#3d7a6f;font-weight:700;font-size:12.5px;padding:6px 14px;border-radius:999px;">✓ Vendido</span>
+                </sc-if>
+              </div>
+              <sc-if value="{{ r.open }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;background:#FAF4EC;border-radius:14px;padding:16px;">
+                  <label style="flex:1;min-width:130px;"><span style="display:block;font-weight:700;font-size:12.5px;color:#5b6764;margin-bottom:5px;">Comisión</span><input value="{{ r.commission }}" onInput="{{ r.onCommission }}" placeholder="$" style="width:100%;padding:10px 12px;border:1px solid #E4D9C8;border-radius:10px;font-size:14.5px;background:#fff;" /></label>
+                  <label style="flex:1;min-width:130px;"><span style="display:block;font-weight:700;font-size:12.5px;color:#5b6764;margin-bottom:5px;">Costo de transporte</span><input value="{{ r.shipping }}" onInput="{{ r.onShipping }}" placeholder="$" style="width:100%;padding:10px 12px;border:1px solid #E4D9C8;border-radius:10px;font-size:14.5px;background:#fff;" /></label>
+                  <button onClick="{{ r.onMarkSold }}" style="background:#2C5E66;color:#fff;border:none;border-radius:999px;padding:12px 22px;font-weight:700;font-size:14px;cursor:pointer;" style-hover="background:#4A8C8F;">Marcar como vendido</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <!-- ================= MODAL INTERÉS ================= -->
+  <sc-if value="{{ interestOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeInterest }}" style="position:fixed;inset:0;z-index:80;background:rgba(36,58,61,.4);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:24px;animation:mareaOverlay .25s ease;">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:24px;padding:36px;width:100%;max-width:440px;animation:mareaPop .3s ease;">
+        <sc-if value="{{ interestDone }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:14px 0;">
+            <div style="width:66px;height:66px;border-radius:50%;background:#EEF3EF;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:30px;color:#3d7a6f;">✓</div>
+            <h3 style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:24px;color:#243a3d;margin:0 0 10px;">¡Listo!</h3>
+            <p style="font-size:15px;color:#6E7B78;margin:0 0 24px;line-height:1.5;">Nos pondremos en contacto contigo muy pronto para coordinar tu compra.</p>
+            <button onClick="{{ closeInterest }}" style="background:#2C5E66;color:#fff;border:none;border-radius:999px;padding:12px 28px;font-weight:700;font-size:15px;cursor:pointer;" style-hover="background:#4A8C8F;">Cerrar</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ interestForm }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <h3 style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:24px;color:#243a3d;margin:0 0 4px;">Quiero este producto</h3>
+            <p style="font-size:14px;color:#6E7B78;margin:0 0 22px;">{{ modalProductName }}</p>
+            <div style="display:flex;flex-direction:column;gap:14px;">
+              <input value="{{ iName }}" onInput="{{ onIName }}" placeholder="Nombre completo" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;" />
+              <input value="{{ iPhone }}" onInput="{{ onIPhone }}" placeholder="Teléfono" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;" />
+              <input value="{{ iAddr }}" onInput="{{ onIAddr }}" placeholder="Dirección de entrega" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;" />
+            </div>
+            <div style="display:flex;gap:10px;margin-top:22px;">
+              <button onClick="{{ closeInterest }}" style="flex:1;background:#fff;color:#6E7B78;border:1px solid #E4D9C8;border-radius:999px;padding:13px;font-weight:700;font-size:15px;cursor:pointer;" style-hover="background:#f6f0e7;">Cancelar</button>
+              <button onClick="{{ submitInterest }}" style="flex:1.5;background:#2C5E66;color:#fff;border:none;border-radius:999px;padding:13px;font-weight:700;font-size:15px;cursor:pointer;" style-hover="background:#4A8C8F;">Enviar solicitud</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ================= MODAL SUBIR PRODUCTO ================= -->
+  <sc-if value="{{ uploadOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeUpload }}" style="position:fixed;inset:0;z-index:80;background:rgba(36,58,61,.4);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:24px;animation:mareaOverlay .25s ease;overflow-y:auto;">
+      <div onClick="{{ stop }}" style="background:#fff;border-radius:24px;padding:36px;width:100%;max-width:500px;animation:mareaPop .3s ease;margin:auto;">
+        <h3 style="font-family:'Fredoka',sans-serif;font-weight:500;font-size:25px;color:#243a3d;margin:0 0 22px;">Subir producto</h3>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <input value="{{ uName }}" onInput="{{ onUName }}" placeholder="Nombre de la pieza" style="flex:1;min-width:160px;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;" />
+            <input value="{{ uBrand }}" onInput="{{ onUBrand }}" placeholder="Marca" style="flex:1;min-width:160px;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;" />
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;">
+            <label style="flex:1;min-width:150px;"><span style="display:block;font-weight:700;font-size:12.5px;color:#5b6764;margin-bottom:5px;">Categoría</span><select value="{{ uCat }}" onChange="{{ onUCat }}" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;cursor:pointer;"><option>Carteras</option><option>Perfumes</option><option>Ropa</option></select></label>
+            <label style="flex:1;min-width:150px;"><span style="display:block;font-weight:700;font-size:12.5px;color:#5b6764;margin-bottom:5px;">Condición</span><select value="{{ uCondition }}" onChange="{{ onUCondition }}" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;cursor:pointer;"><option>Nuevo</option><option>Como nuevo</option><option>Excelente</option><option>Bueno</option></select></label>
+          </div>
+          <input value="{{ uPrice }}" onInput="{{ onUPrice }}" placeholder="Precio (USD)" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;" />
+          <textarea value="{{ uDesc }}" onInput="{{ onUDesc }}" placeholder="Descripción de la pieza…" rows="3" style="width:100%;padding:12px 14px;border:1px solid #E4D9C8;border-radius:12px;font-size:15px;background:#FCFAF6;resize:vertical;font-family:inherit;"></textarea>
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;height:74px;border-radius:12px;border:1.5px dashed #D9CBB6;background:repeating-linear-gradient(135deg,#F4ECDF,#F4ECDF 8px,#ECE1CF 8px,#ECE1CF 16px);display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;font-size:11px;color:#a3987f;">+ foto</div>
+            <div style="flex:1;height:74px;border-radius:12px;border:1.5px dashed #D9CBB6;background:repeating-linear-gradient(135deg,#F4ECDF,#F4ECDF 8px,#ECE1CF 8px,#ECE1CF 16px);display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;font-size:11px;color:#a3987f;">+ foto</div>
+            <div style="flex:1;height:74px;border-radius:12px;border:1.5px dashed #D9CBB6;background:repeating-linear-gradient(135deg,#F4ECDF,#F4ECDF 8px,#ECE1CF 8px,#ECE1CF 16px);display:flex;align-items:center;justify-content:center;font-family:'Courier New',monospace;font-size:11px;color:#a3987f;">+ foto</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:24px;">
+          <button onClick="{{ closeUpload }}" style="flex:1;background:#fff;color:#6E7B78;border:1px solid #E4D9C8;border-radius:999px;padding:13px;font-weight:700;font-size:15px;cursor:pointer;" style-hover="background:#f6f0e7;">Cancelar</button>
+          <button onClick="{{ submitUpload }}" style="flex:1.5;background:#2C5E66;color:#fff;border:none;border-radius:999px;padding:13px;font-weight:700;font-size:15px;cursor:pointer;" style-hover="background:#4A8C8F;">Guardar y enviar a revisión</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ================= TOAST ================= -->
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:90;background:#243a3d;color:#fff;padding:14px 26px;border-radius:999px;font-weight:600;font-size:14.5px;box-shadow:0 12px 30px rgba(36,58,61,.3);animation:mareaToast .35s ease;">{{ toast }}</div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240,&quot;height&quot;:860},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;catalog&quot;,&quot;detail&quot;,&quot;register&quot;,&quot;seller&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;catalog&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;},&quot;currentSeller&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Valentina Ríos&quot;,&quot;Camila Torres&quot;,&quot;Sofía Méndez&quot;],&quot;default&quot;:&quot;Valentina Ríos&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    const seller = props.currentSeller || 'Valentina Ríos';
+    this.state = {
+      screen: props.startScreen || 'catalog',
+      currentSeller: seller,
+      selectedId: 'p1',
+      cat: 'Todas',
+      brand: 'Todas',
+      priceMax: 5000,
+      search: '',
+      gallery: 0,
+      adminTab: 'cuentas',
+      interestOpen: false,
+      interestDone: false,
+      uploadOpen: false,
+      regSubmitted: false,
+      toast: '',
+      seq: 100,
+      interestForm: { name:'', phone:'', address:'' },
+      regForm: { name:'', email:'', phone:'', address:'', password:'' },
+      uploadForm: { name:'', brand:'', desc:'', price:'', cat:'Carteras', condition:'Nuevo' },
+      products: [
+        { id:'p1', brand:'Chanel', name:'Bolso Classic Flap mediano', category:'Carteras', price:4200, condition:'Como nuevo', status:'publicado', isNew:false, seller:'Camila Torres', images:['frente','interior','detalle'], imageUrls:['https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=800&h=800&fit=crop&q=80'], description:'Icónico bolso en piel acolchada caviar con herrajes dorados y cadena entrelazada. Incluye dust bag y caja original.' },
+        { id:'p2', brand:'Dior', name:"Perfume J'adore 100ml", category:'Perfumes', price:180, condition:'Nuevo', status:'publicado', isNew:true, seller:'Valentina Ríos', images:['frasco','caja','detalle'], imageUrls:['https://images.unsplash.com/photo-1541643600914-78b084683702?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1590156562745-5f39a0b36edd?w=800&h=800&fit=crop&q=80'], description:'Eau de parfum sellado, edición 100ml. Notas florales de ylang-ylang, rosa damascena y jazmín.' },
+        { id:'p3', brand:'Louis Vuitton', name:'Neverfull MM monogram', category:'Carteras', price:2350, condition:'Excelente', status:'publicado', isNew:false, seller:'Valentina Ríos', images:['frente','interior','asas'], imageUrls:['https://images.unsplash.com/photo-1591561954555-07991f6a56b4?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1547949003-9792a18a2601?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1578393098337-9b36e23c4ac3?w=800&h=800&fit=crop&q=80'], description:'Tote versátil en lona monogram con interior espacioso y pochette desmontable. Cuero vachetta con pátina natural.' },
+        { id:'p4', brand:'Hermès', name:'Pañuelo de seda Carré 90', category:'Ropa', price:520, condition:'Nuevo', status:'publicado', isNew:true, seller:'Sofía Méndez', images:['extendido','detalle','caja'], imageUrls:['https://images.unsplash.com/photo-1601924994987-69e26d50dc26?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1583744946564-b52ac1c389c8?w=800&h=800&fit=crop&q=80'], description:'Pañuelo de seda twill 90x90 con estampado ecuestre y dobladillo cosido a mano. Pieza de colección.' },
+        { id:'p5', brand:'Gucci', name:'Vestido midi plisado', category:'Ropa', price:980, condition:'Como nuevo', status:'publicado', isNew:false, seller:'Camila Torres', images:['frente','espalda','tela'], imageUrls:['https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1469334640952-4baaacf5c37c?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800&h=800&fit=crop&q=80'], description:'Vestido midi en seda plisada con cinturón GG. Talla S. Usado una vez en evento.' },
+        { id:'p6', brand:'Prada', name:'Bolso Re-Edition 2005', category:'Carteras', price:1450, condition:'Excelente', status:'publicado', isNew:false, seller:'Valentina Ríos', images:['frente','correa','interior'], imageUrls:['https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1563904092230-7ec217b65fe2?w=800&h=800&fit=crop&q=80'], description:'Mini bag en nylon Re-Nylon con correa ajustable y triángulo metálico. Color negro atemporal.' },
+        { id:'p7', brand:'Saint Laurent', name:'Blazer de lana estructurado', category:'Ropa', price:1200, condition:'Bueno', status:'publicado', isNew:false, seller:'Sofía Méndez', images:['frente','hombros','forro'], imageUrls:['https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1551232864-3f0890e580d9?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&h=800&fit=crop&q=80'], description:'Blazer en lana virgen con hombros estructurados y botones de carey. Talla M.' },
+        { id:'p8', brand:'Tom Ford', name:'Perfume Lost Cherry 50ml', category:'Perfumes', price:390, condition:'Nuevo', status:'publicado', isNew:true, seller:'Camila Torres', images:['frasco','caja','detalle'], imageUrls:['https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1541643600914-78b084683702?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1590156562745-5f39a0b36edd?w=800&h=800&fit=crop&q=80'], description:'Eau de parfum unisex sellado. Cereza negra, licor de almendra y tonka. 50ml.' },
+        { id:'p9', brand:'Chanel', name:'Perfume N°5 Eau de Parfum 50ml', category:'Perfumes', price:140, condition:'Nuevo', status:'en revisión', isNew:false, seller:'Valentina Ríos', images:['frasco','caja','detalle'], imageUrls:['https://images.unsplash.com/photo-1590156562745-5f39a0b36edd?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1541643600914-78b084683702?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=800&h=800&fit=crop&q=80'], description:'El clásico atemporal en presentación de 50ml, sellado de fábrica.' },
+        { id:'p10', brand:'Fendi', name:'Baguette bag clásica', category:'Carteras', price:2800, condition:'Como nuevo', status:'vendido', isNew:false, seller:'Valentina Ríos', images:['frente','hebilla','interior'], imageUrls:['https://images.unsplash.com/photo-1547949003-9792a18a2601?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1578393098337-9b36e23c4ac3?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&h=800&fit=crop&q=80'], description:'La icónica Baguette en piel con hebilla FF. Pieza vintage restaurada.' },
+        { id:'p11', brand:'Bottega Veneta', name:'Bolso Jodie intrecciato', category:'Carteras', price:3100, condition:'Excelente', status:'en revisión', isNew:false, seller:'Sofía Méndez', images:['frente','tejido','asa'], imageUrls:['https://images.unsplash.com/photo-1591561954555-07991f6a56b4?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=800&h=800&fit=crop&q=80','https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&h=800&fit=crop&q=80'], description:'Hobo bag en piel tejida intrecciato, color fondant. Suave y estructurado.' }
+      ],
+      sellers: [
+        { id:'s1', name:'Sofía Méndez', email:'sofia@mareaSV.com', phone:'+503 7811 5518', address:'San Salvador, SV', status:'pendiente' },
+        { id:'s2', name:'Andrea Gómez', email:'andrea@mail.com', phone:'+503 7900 4212', address:'Santa Ana, SV', status:'pendiente' },
+        { id:'s3', name:'Lucía Fernández', email:'lucia@mail.com', phone:'+503 7320 9918', address:'San Miguel, SV', status:'pendiente' }
+      ],
+      requests: [
+        { id:'r1', productId:'p1', productName:'Bolso Classic Flap mediano', brand:'Chanel', buyerName:'Mariana López', buyerPhone:'+503 7815 2231', buyerAddress:'San Salvador, SV', status:'pendiente', commission:'', shipping:'' },
+        { id:'r2', productId:'p3', productName:'Neverfull MM monogram', brand:'Louis Vuitton', buyerName:'Daniela Ruiz', buyerPhone:'+503 7918 4477', buyerAddress:'Santa Tecla, SV', status:'pendiente', commission:'', shipping:'' }
+      ]
+    };
+    this._t = null;
+  }
+
+  money(n){ return '$' + Number(n||0).toLocaleString('en-US'); }
+  top(){ try { window.scrollTo({ top:0, behavior:'smooth' }); } catch(e){} }
+  go(screen){ this.setState({ screen }); this.top(); }
+  showToast(msg){ this.setState({ toast: msg }); clearTimeout(this._t); this._t = setTimeout(()=>this.setState({ toast:'' }), 2800); }
+  upd(form, field, val){ this.setState(s => ({ [form]: Object.assign({}, s[form], { [field]: val }) })); }
+
+  navStyle(active){
+    return 'padding:9px 16px;border-radius:999px;border:none;cursor:pointer;font-weight:600;font-size:14.5px;transition:all .2s;background:' + (active?'#E7EEE9':'transparent') + ';color:' + (active?'#2C5E66':'#6E7B78') + ';';
+  }
+  chipStyle(active){
+    return 'display:block;width:100%;text-align:left;padding:9px 14px;margin:4px 0;border-radius:12px;border:1px solid ' + (active?'#2C5E66':'#EBE2D6') + ';background:' + (active?'#2C5E66':'#fff') + ';color:' + (active?'#fff':'#5b6764') + ';cursor:pointer;font-weight:600;font-size:14px;transition:all .18s;';
+  }
+  chipHover(active){ return active ? '' : 'border-color:#9fbcb3;color:#2C5E66;'; }
+  badge(status){
+    const map = {
+      'publicado':['Publicado','#E3F0E8','#2E6B4F'],
+      'aprobada':['Aprobada','#E3F0E8','#2E6B4F'],
+      'en revisión':['En revisión','#FBEEDD','#A9762C'],
+      'pendiente':['Pendiente','#FBEEDD','#A9762C'],
+      'vendido':['Vendido','#ECE7E0','#8A7E6E'],
+      'rechazado':['Rechazado','#F6E2E0','#B24A3E'],
+      'rechazada':['Rechazada','#F6E2E0','#B24A3E']
+    };
+    const m = map[status] || ['—','#eee','#666'];
+    return { label:m[0], style:'display:inline-block;padding:5px 13px;border-radius:999px;font-weight:700;font-size:12px;letter-spacing:.02em;background:'+m[1]+';color:'+m[2]+';' };
+  }
+
+  renderVals(){
+    const S = this.state;
+    const pub = S.products.filter(p => p.status === 'publicado');
+
+    // filters
+    let f = pub.slice();
+    if (S.cat !== 'Todas') f = f.filter(p => p.category === S.cat);
+    if (S.brand !== 'Todas') f = f.filter(p => p.brand === S.brand);
+    f = f.filter(p => p.price <= S.priceMax);
+    if (S.search.trim()) {
+      const q = S.search.toLowerCase();
+      f = f.filter(p => (p.name + ' ' + p.brand + ' ' + p.category).toLowerCase().includes(q));
+    }
+
+    const catalog = f.map(p => ({
+      id:p.id, brand:p.brand, name:p.name, condition:p.condition, isNew:p.isNew,
+      priceLabel:this.money(p.price),
+      imgLabel:(p.category + ' · ' + p.brand).toLowerCase(),
+      imageUrl:(p.imageUrls||[])[0]||'',
+      hasImage:!!(p.imageUrls&&p.imageUrls[0]),
+      noImage:!(p.imageUrls&&p.imageUrls[0]),
+      onSelect:()=>{ this.setState({ screen:'detail', selectedId:p.id, gallery:0 }); this.top(); }
+    }));
+
+    // nav
+    const navItems = [
+      { key:'catalog', label:'Catálogo' },
+      { key:'register', label:'Vender' },
+      { key:'seller', label:'Mi panel' },
+      { key:'admin', label:'Admin' }
+    ].map(n => ({
+      label:n.label,
+      onClick:()=>this.go(n.key),
+      style:this.navStyle(S.screen === n.key),
+      styleHover:(S.screen === n.key)?'':'background:#EFE9DF;color:#2C5E66;'
+    }));
+
+    // category chips
+    const cats = ['Todas','Carteras','Perfumes','Ropa'];
+    const catChips = cats.map(c => ({
+      label:c, onClick:()=>this.setState({ cat:c }),
+      style:this.chipStyle(S.cat===c), styleHover:this.chipHover(S.cat===c)
+    }));
+
+    // brand chips
+    const brandList = ['Todas'].concat(Array.from(new Set(pub.map(p => p.brand))).sort());
+    const brandChips = brandList.map(b => ({
+      label:b, onClick:()=>this.setState({ brand:b }),
+      style:this.chipStyle(S.brand===b), styleHover:this.chipHover(S.brand===b)
+    }));
+
+    // detail
+    const cur = S.products.find(p => p.id === S.selectedId) || S.products[0];
+    const galleryThumbs = (cur.images||[]).map((lbl, i) => ({
+      label:lbl, onClick:()=>this.setState({ gallery:i }),
+      thumbUrl:(cur.imageUrls||[])[i]||'',
+      hasThumb:!!(cur.imageUrls&&cur.imageUrls[i]),
+      noThumb:!(cur.imageUrls&&cur.imageUrls[i]),
+      style:'position:relative;overflow:hidden;width:90px;height:74px;border-radius:12px;border:2px solid ' + (i===S.gallery?'#2C5E66':'#EBE2D6') + ';background:repeating-linear-gradient(135deg,#EFE6D7,#EFE6D7 10px,#E6D9C6 10px,#E6D9C6 20px);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s;'
+    }));
+
+    // seller panel
+    const mine = S.products.filter(p => p.seller === S.currentSeller);
+    const sellerProducts = mine.map(p => {
+      const b = this.badge(p.status);
+      return { brand:p.brand, name:p.name, priceLabel:this.money(p.price), statusLabel:b.label, statusStyle:b.style };
+    });
+
+    // admin sellers
+    const sellersVM = S.sellers.map(s => {
+      const b = this.badge(s.status);
+      return {
+        name:s.name, email:s.email, phone:s.phone, address:s.address,
+        statusLabel:b.label, statusStyle:b.style, canAct:s.status==='pendiente',
+        onApprove:()=>{ this.setState(st=>({ sellers:st.sellers.map(x=>x.id===s.id?Object.assign({},x,{status:'aprobada'}):x) })); this.showToast('Cuenta de '+s.name+' aprobada'); },
+        onReject:()=>{ this.setState(st=>({ sellers:st.sellers.map(x=>x.id===s.id?Object.assign({},x,{status:'rechazada'}):x) })); this.showToast('Cuenta rechazada'); }
+      };
+    });
+
+    // admin pending products
+    const pend = S.products.filter(p => p.status === 'en revisión');
+    const pendingProducts = pend.map(p => ({
+      brand:p.brand, name:p.name, category:p.category, condition:p.condition, seller:p.seller, priceLabel:this.money(p.price),
+      onApprove:()=>{ this.setState(st=>({ products:st.products.map(x=>x.id===p.id?Object.assign({},x,{status:'publicado'}):x) })); this.showToast('"'+p.name+'" publicado en el catálogo'); },
+      onReject:()=>{ this.setState(st=>({ products:st.products.map(x=>x.id===p.id?Object.assign({},x,{status:'rechazado'}):x) })); this.showToast('Producto rechazado'); }
+    }));
+
+    // admin requests
+    const requestsVM = S.requests.map(r => ({
+      productName:r.productName, brand:r.brand, buyerName:r.buyerName, buyerPhone:r.buyerPhone, buyerAddress:r.buyerAddress,
+      commission:r.commission, shipping:r.shipping, sold:r.status==='vendido', open:r.status!=='vendido',
+      onCommission:(e)=>{ const v=e.target.value; this.setState(st=>({ requests:st.requests.map(x=>x.id===r.id?Object.assign({},x,{commission:v}):x) })); },
+      onShipping:(e)=>{ const v=e.target.value; this.setState(st=>({ requests:st.requests.map(x=>x.id===r.id?Object.assign({},x,{shipping:v}):x) })); },
+      onMarkSold:()=>{
+        this.setState(st=>({
+          requests:st.requests.map(x=>x.id===r.id?Object.assign({},x,{status:'vendido'}):x),
+          products:st.products.map(x=>x.id===r.productId?Object.assign({},x,{status:'vendido'}):x)
+        }));
+        this.showToast('"'+r.productName+'" marcado como vendido');
+      }
+    }));
+
+    // admin tabs
+    const tabs = [
+      { key:'cuentas', label:'Cuentas pendientes', count:S.sellers.filter(s=>s.status==='pendiente').length },
+      { key:'productos', label:'Productos pendientes', count:pend.length },
+      { key:'solicitudes', label:'Solicitudes de interés', count:S.requests.filter(r=>r.status!=='vendido').length }
+    ];
+    const adminTabs = tabs.map(t => ({
+      label:t.label, count:t.count, hasCount:t.count>0,
+      onClick:()=>this.setState({ adminTab:t.key }),
+      style:'display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border:none;background:transparent;cursor:pointer;font-weight:700;font-size:14.5px;color:'+(S.adminTab===t.key?'#2C5E66':'#9a8f7d')+';border-bottom:2.5px solid '+(S.adminTab===t.key?'#2C5E66':'transparent')+';transition:all .2s;',
+      badgeStyle:'background:'+(S.adminTab===t.key?'#2C5E66':'#cdbfa8')+';color:#fff;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;'
+    }));
+
+    const ic = S.interestForm, rf = S.regForm, uf = S.uploadForm;
+
+    return {
+      // screen flags
+      isCatalog:S.screen==='catalog', isDetail:S.screen==='detail', isRegister:S.screen==='register',
+      isSeller:S.screen==='seller', isAdmin:S.screen==='admin',
+      isTabCuentas:S.adminTab==='cuentas', isTabProductos:S.adminTab==='productos', isTabSolicitudes:S.adminTab==='solicitudes',
+      // nav + search
+      goCatalog:()=>this.go('catalog'),
+      navItems, search:S.search, onSearch:(e)=>this.setState({ search:e.target.value }),
+      // catalog
+      catChips, brandChips, priceMax:S.priceMax, priceMaxLabel:this.money(S.priceMax),
+      onPrice:(e)=>this.setState({ priceMax:Number(e.target.value) }),
+      catalog, isEmpty:catalog.length===0, resultLabel:catalog.length + (catalog.length===1?' pieza disponible':' piezas disponibles'),
+      // detail
+      dBrand:cur.brand, dName:cur.name, dPriceLabel:this.money(cur.price), dCondition:cur.condition,
+      dDesc:cur.description, dSeller:cur.seller, dGalleryLabel:(cur.images||[])[S.gallery],
+      dImageUrl:(cur.imageUrls||[])[S.gallery]||'',
+      dHasImage:!!(cur.imageUrls&&cur.imageUrls[S.gallery]),
+      dNoImage:!(cur.imageUrls&&cur.imageUrls[S.gallery]),
+      galleryThumbs,
+      openInterest:()=>this.setState({ interestOpen:true, interestDone:false }),
+      // seller panel
+      sellerName:S.currentSeller,
+      sPublished:mine.filter(p=>p.status==='publicado').length,
+      sReview:mine.filter(p=>p.status==='en revisión').length,
+      sSold:mine.filter(p=>p.status==='vendido').length,
+      sellerProducts, openUpload:()=>this.setState({ uploadOpen:true }),
+      // admin
+      adminTabs, sellersVM, pendingProducts, noPendingProducts:pendingProducts.length===0,
+      requestsVM, noRequests:S.requests.length===0,
+      // interest modal
+      interestOpen:S.interestOpen, interestDone:S.interestDone, interestForm:true,
+      modalProductName:cur.brand + ' · ' + cur.name,
+      iName:ic.name, iPhone:ic.phone, iAddr:ic.address,
+      onIName:(e)=>this.upd('interestForm','name',e.target.value),
+      onIPhone:(e)=>this.upd('interestForm','phone',e.target.value),
+      onIAddr:(e)=>this.upd('interestForm','address',e.target.value),
+      closeInterest:()=>this.setState({ interestOpen:false, interestDone:false }),
+      submitInterest:()=>{
+        if(!ic.name.trim() || !ic.phone.trim()){ this.showToast('Completa tu nombre y teléfono'); return; }
+        const id = 'r' + (S.seq+1);
+        this.setState(st=>({
+          seq:st.seq+1,
+          requests:st.requests.concat([{ id, productId:cur.id, productName:cur.name, brand:cur.brand, buyerName:ic.name, buyerPhone:ic.phone, buyerAddress:ic.address||'—', status:'pendiente', commission:'', shipping:'' }]),
+          interestDone:true, interestForm:{ name:'', phone:'', address:'' }
+        }));
+      },
+      // register
+      regSubmitted:S.regSubmitted, regForm:true,
+      rName:rf.name, rEmail:rf.email, rPhone:rf.phone, rAddr:rf.address, rPass:rf.password,
+      onRName:(e)=>this.upd('regForm','name',e.target.value),
+      onREmail:(e)=>this.upd('regForm','email',e.target.value),
+      onRPhone:(e)=>this.upd('regForm','phone',e.target.value),
+      onRAddr:(e)=>this.upd('regForm','address',e.target.value),
+      onRPass:(e)=>this.upd('regForm','password',e.target.value),
+      submitRegister:()=>{
+        if(!rf.name.trim() || !rf.email.trim()){ this.showToast('Completa nombre y correo'); return; }
+        const id = 's' + (S.seq+1);
+        this.setState(st=>({
+          seq:st.seq+1,
+          sellers:st.sellers.concat([{ id, name:rf.name, email:rf.email, phone:rf.phone||'—', address:rf.address||'—', status:'pendiente' }]),
+          regSubmitted:true
+        }));
+      },
+      // upload
+      uploadOpen:S.uploadOpen,
+      uName:uf.name, uBrand:uf.brand, uDesc:uf.desc, uPrice:uf.price, uCat:uf.cat, uCondition:uf.condition,
+      onUName:(e)=>this.upd('uploadForm','name',e.target.value),
+      onUBrand:(e)=>this.upd('uploadForm','brand',e.target.value),
+      onUDesc:(e)=>this.upd('uploadForm','desc',e.target.value),
+      onUPrice:(e)=>this.upd('uploadForm','price',e.target.value),
+      onUCat:(e)=>this.upd('uploadForm','cat',e.target.value),
+      onUCondition:(e)=>this.upd('uploadForm','condition',e.target.value),
+      closeUpload:()=>this.setState({ uploadOpen:false }),
+      submitUpload:()=>{
+        if(!uf.name.trim() || !uf.brand.trim()){ this.showToast('Completa nombre y marca'); return; }
+        const id = 'p' + (S.seq+1);
+        this.setState(st=>({
+          seq:st.seq+1,
+          products:st.products.concat([{ id, brand:uf.brand, name:uf.name, category:uf.cat, price:Number(uf.price)||0, condition:uf.condition, status:'en revisión', isNew:false, seller:st.currentSeller, images:['frente','detalle','interior'], description:uf.desc||'Sin descripción.' }]),
+          uploadOpen:false,
+          uploadForm:{ name:'', brand:'', desc:'', price:'', cat:'Carteras', condition:'Nuevo' }
+        }));
+        this.showToast('Producto enviado a revisión');
+      },
+      // misc
+      stop:(e)=>e.stopPropagation(),
+      hasToast:!!S.toast, toast:S.toast
+    };
+  }
+}
+</script>
+</body>
+</html>
